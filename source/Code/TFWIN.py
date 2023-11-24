@@ -1,14 +1,13 @@
 import time
+from typing import List, Tuple, Dict
 
-# Cài đặt cấu trúc dữ liệu WN-list
 class WNList:
-    def __init__(self, pre, post, weight):
+    def __init__(self, pre: int, post: int, weight: float):
         self.pre = pre
         self.post = post
         self.weight = weight
 
-# Tạo WN-list cho các item 1
-def create_item_wnlists(items, weights, transactions):
+def create_item_wnlists(items: List[str], weights: Dict[str, float], transactions: List[List[str]]) -> Dict[str, List[WNList]]:
     wnlists = {}
 
     for item in items:
@@ -21,8 +20,7 @@ def create_item_wnlists(items, weights, transactions):
 
     return wnlists
 
-# Tìm giao của 2 WN-list
-def intersect_wnlists(wnlist1, wnlist2):
+def intersect_wnlists(wnlist1: List[WNList], wnlist2: List[WNList]) -> List[WNList]:
     i = 0
     j = 0
 
@@ -37,8 +35,7 @@ def intersect_wnlists(wnlist1, wnlist2):
 
     return intersect
 
-# Tính ws cho một pattern dựa trên WN-list
-def calc_ws(wnlist, total_weight):
+def calc_ws(wnlist: List[WNList], total_weight: float) -> float:
     sum_weight = 0
 
     for node in wnlist:
@@ -46,15 +43,13 @@ def calc_ws(wnlist, total_weight):
 
     return sum_weight / total_weight
 
-# Thuật toán chính
-def tfwin(transactions, weights, k):
+def tfwin(transactions: List[List[str]], weights: Dict[str, float], k: int) -> List[Tuple[str, float]]:
     items = list(set().union(*transactions))
 
     wnlists = create_item_wnlists(items, weights, transactions)
 
     topk = []
 
-    # B1: Thêm các item 1 vào topk
     for item, wnlist in wnlists.items():
         ws = calc_ws(wnlist, sum(weights.values()))
         topk.append((item, ws))
@@ -62,7 +57,6 @@ def tfwin(transactions, weights, k):
     topk.sort(key=lambda x: x[1], reverse=True)
     topk = topk[:k]
 
-    # B2: Tổ hợp và thêm vào topk
     i = 0
     while i < len(topk):
         pivot = topk[i][0]
@@ -84,45 +78,33 @@ def tfwin(transactions, weights, k):
 
     return topk
 
-# Dữ liệu mẫu
-dataset = [
-    [(1, 0.5), (2, 0.8), (3, 0.3)],
-    [(2, 0.6), (4, 0.7)],
-    [(1, 0.4), (3, 0.2), (4, 0.9)],
-    [(2, 0.7), (3, 0.5), (4, 0.3)],
-    [(1, 0.2), (2, 0.4), (3, 0.6)],
-    [(1, 0.3), (3, 0.5)],
-    [(2, 0.9), (3, 0.3), (4, 0.7)],
+# Sample dataset
+dataset: List[List[Tuple[str, float]]] = [
+    [('1', 0.5), ('2', 0.8), ('3', 0.3)],
+    [('2', 0.6), ('4', 0.7)],
+    [('1', 0.4), ('3', 0.2), ('4', 0.9)],
+    [('2', 0.7), ('3', 0.5), ('4', 0.3)],
+    [('1', 0.2), ('2', 0.4), ('3', 0.6)],
+    [('1', 0.3), ('3', 0.5)],
+    [('2', 0.9), ('3', 0.3), ('4', 0.7)],
 ]
 
-# Chuyển đổi dataset thành dạng transactions
-transactions = []
-for transaction in dataset:
-    t = []
-    for item, weight in transaction:
-        t.append(str(item))
+# Convert dataset to transactions
+transactions = [[item[0] for item, _ in transaction] for transaction in dataset]
 
-    transactions.append(t)
+# Initialize weights
+weights = {item: weight for transaction in dataset for item, weight in transaction}
 
-# Khởi tạo weights
-weights = {}
-for transaction in dataset:
-    for item, weight in transaction:
-        weights[str(item)] = weight
-
-# Chạy thuật toán
+# Run the algorithm and measure running time
 k = 3
+start_time = time.time()
 result = tfwin(transactions, weights, k)
+end_time = time.time()
 
-# In kết quả
+# Print the result and running time
 print("Top-{} FWIs: ".format(k))
 for x in result:
     print(x)
 
-start = time.time()
-result = tfwin(transactions, weights, k)
-end = time.time()
-
-running_time = end - start
-
-print("Running time: ", running_time, "seconds")
+running_time = end_time - start_time
+print("Running time: {:.6f} seconds".format(running_time))
